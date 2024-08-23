@@ -1,32 +1,39 @@
 import math
+import time
 from pathlib import Path
-from typing import List
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.lib.units import cm, inch
+from reportlab.lib.units import cm
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Table, TableStyle
 
 from helpers import load_config, load_names_from_file, calculate_font_size
 
 
-def generate_nametags(names: List[str], cell_width_cm: float, cell_height_cm: float, font_name: str) -> None:
+def generate_nametags(names, cell_width_cm, cell_height_cm, font_name):
     """
     Génère un fichier PDF de badges nominatifs avec les noms fournis.
     """
     cell_width = cell_width_cm * cm
     cell_height = cell_height_cm * cm
 
-    columns = int((letter[0] - inch) // cell_width)
-    rows = int((letter[1] - inch) // cell_height)
+    columns = int((letter[0]) // cell_width)
+    rows = int((letter[1]) // cell_height)
 
     tags_per_page = columns * rows
     total_tags = len(names)
     total_pages = math.ceil(total_tags / tags_per_page)
 
     pdf_file = "badges_nominatifs.pdf"
-    document = SimpleDocTemplate(pdf_file, pagesize=letter)
+    document = SimpleDocTemplate(
+        pdf_file,
+        pagesize=letter,
+        leftMargin=0,
+        rightMargin=0,
+        topMargin=0,
+        bottomMargin=0
+    )
     elements = []
     styles = getSampleStyleSheet()
     name_style = styles['Title']
@@ -56,8 +63,6 @@ def generate_nametags(names: List[str], cell_width_cm: float, cell_height_cm: fl
         ]))
 
         elements.append(table)
-        if page < total_pages - 1:
-            elements.append(Paragraph("<br/>", styles['Normal']))
 
     try:
         document.build(elements)
@@ -69,11 +74,13 @@ def generate_nametags(names: List[str], cell_width_cm: float, cell_height_cm: fl
 if __name__ == "__main__":
     try:
         config = load_config(Path('config.yaml'))
-        file_path = Path(config['file_path'])
+        file_path = Path(config['chemin_vers_le_fichier_de_noms'])
         names = load_names_from_file(file_path)
-        cell_width_cm = float(config['cell_width_cm'])
-        cell_height_cm = float(config['cell_height_cm'])
-        font_name = config['font_name']
+        cell_width_cm = float(config['largeur_cellule_cm'])
+        cell_height_cm = float(config['hauteur_cellule_cm'])
+        font_name = config['police']
         generate_nametags(names, cell_width_cm, cell_height_cm, font_name)
     except Exception as e:
         print(f"Erreur : {str(e)}")
+    finally:
+        time.sleep(10)

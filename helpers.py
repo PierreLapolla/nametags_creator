@@ -14,10 +14,10 @@ def load_config(config_file: Path) -> dict:
         print(
             f"Le fichier de configuration '{config_file}' est introuvable. Création d'un fichier de configuration par défaut.")
         default_config = {
-            'file_path': 'noms.txt',
-            'cell_width_cm': 4.0,
-            'cell_height_cm': 2.5,
-            'font_name': 'Helvetica-Bold'
+            'chemin_vers_le_fichier_de_noms': 'noms.txt',
+            'largeur_cellule_cm': 4.0,
+            'hauteur_cellule_cm': 2.5,
+            'police': 'Helvetica-Bold'
         }
         try:
             with config_file.open('w') as file:
@@ -44,13 +44,13 @@ def load_names_from_file(file_path: Path) -> List[str]:
         print(f"Le fichier '{file_path}' est introuvable. Création d'un fichier de noms par défaut.")
         default_names = [
             "Alice Dupont",
-            "Bob Martin",
+            "Théo Leblanc",  # Example with accent
             "Claire Leblanc",
             "David Petit",
             "Emma Moreau"
         ]
         try:
-            with file_path.open('w') as file:
+            with file_path.open('w', encoding='utf-8') as file:
                 file.write("\n".join(default_names))
             print(f"Fichier de noms par défaut créé à : {file_path}")
         except Exception as e:
@@ -58,7 +58,7 @@ def load_names_from_file(file_path: Path) -> List[str]:
         return default_names
     else:
         try:
-            with file_path.open('r') as file:
+            with file_path.open('r', encoding='utf-8') as file:
                 names = [line.strip() for line in file if line.strip()]
             return names
         except Exception as e:

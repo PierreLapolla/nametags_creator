@@ -1,47 +1,17 @@
 import math
-from typing import List
 from pathlib import Path
+from typing import List
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import cm, inch
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Table, TableStyle
-from reportlab.lib.utils import simpleSplit
+
+from helpers import load_config, load_names_from_file, calculate_font_size
 
 
-def load_names_from_file(file_path: Path) -> List[str]:
-    """
-    Charge les noms à partir d'un fichier texte.
-    """
-    while not file_path.exists():
-        print(f"Erreur : le fichier '{file_path}' est introuvable.")
-        file_path = Path(input("Veuillez entrer le chemin correct pour le fichier des noms : "))
-
-    try:
-        with file_path.open('r') as file:
-            names = [line.strip() for line in file if line.strip()]
-        return names
-    except Exception as e:
-        raise Exception(f"Erreur lors du chargement des noms : {str(e)}")
-
-
-def calculate_font_size(text: str, max_width: float, max_height: float) -> int:
-    font_size = 24  # Start with a default large font size
-
-    while font_size > 1:  # Loop until we find a font size that fits or reach the minimum size
-        lines = simpleSplit(text, 'Helvetica-Bold', font_size, max_width)
-        text_width = max(len(line) * (font_size / 2) for line in lines)  # Estimate width
-        text_height = len(lines) * font_size * 1.2  # Estimate height, including line spacing
-
-        if text_width <= max_width and text_height <= max_height:
-            break  # If it fits, stop the loop
-        font_size -= 1  # Reduce font size and try again
-
-    return font_size
-
-
-def generate_nametags(names: List[str], cell_width_cm: float, cell_height_cm: float) -> None:
+def generate_nametags(names: List[str], cell_width_cm: float, cell_height_cm: float, font_name: str) -> None:
     """
     Génère un fichier PDF de badges nominatifs avec les noms fournis.
     """
@@ -68,7 +38,7 @@ def generate_nametags(names: List[str], cell_width_cm: float, cell_height_cm: fl
 
         for i in range(start_index, end_index):
             full_name = names[i]
-            font_size = calculate_font_size(full_name, cell_width // 2, cell_height // 2)
+            font_size = calculate_font_size(full_name, cell_width // 2, cell_height // 2, font_name)
             name_style.fontSize = font_size
             name_paragraph = Paragraph(full_name, name_style)
             data.append(name_paragraph)
@@ -81,7 +51,7 @@ def generate_nametags(names: List[str], cell_width_cm: float, cell_height_cm: fl
             ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+            ('FONTNAME', (0, 0), (-1, -1), font_name),
             ('GRID', (0, 0), (-1, -1), 1, colors.black),
         ]))
 
@@ -98,8 +68,12 @@ def generate_nametags(names: List[str], cell_width_cm: float, cell_height_cm: fl
 
 if __name__ == "__main__":
     try:
-        file_path = Path('noms.txt')
+        config = load_config(Path('config.yaml'))
+        file_path = Path(config['file_path'])
         names = load_names_from_file(file_path)
-        generate_nametags(names, cell_width_cm=4, cell_height_cm=2.5)
+        cell_width_cm = float(config['cell_width_cm'])
+        cell_height_cm = float(config['cell_height_cm'])
+        font_name = config['font_name']
+        generate_nametags(names, cell_width_cm, cell_height_cm, font_name)
     except Exception as e:
         print(f"Erreur : {str(e)}")
